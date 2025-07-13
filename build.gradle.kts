@@ -11,6 +11,8 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("org.jsoup:jsoup:1.21.1")
+    implementation("org.htmlunit:htmlunit:4.13.0")
 }
 
 tasks.test {
