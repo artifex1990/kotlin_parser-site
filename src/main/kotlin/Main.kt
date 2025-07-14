@@ -1,16 +1,45 @@
 package org.example
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-fun main() {
-    val name = "Kotlin"
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    println("Hello, " + name + "!")
+// Использую htmlunit из-за динамического контента на сайте
+// Jsoup работает со статикой, на сайте у нас React
+import org.htmlunit.WebClient
+import org.htmlunit.html.HtmlPage
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import org.jsoup.select.Elements
 
-    for (i in 1..5) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        println("i = $i")
+const val URL_QUOTES =
+    "http://mybook.ru/author/duglas-adams/avtostopom-po-galaktike-restoran-u-konca-vselennoj/citations/"
+const val SELECTOR_QUOTES = "article"
+const val TIMEOUT_LOADING_JS: Long = 10000
+
+fun main() {
+    // webClient - эмулятор браузера, для загрузки динамического контента
+    val webClient = WebClient().apply {
+        options.apply {
+            isJavaScriptEnabled = true // включаем js
+            isCssEnabled = false // отключаем css стили
+            isThrowExceptionOnScriptError = false  // Игнорировать JS ошибки
+        }
+        // Ожидание фоновых JS-запросов
+        waitForBackgroundJavaScript(TIMEOUT_LOADING_JS)
+    }
+
+    // Запрашиваю динамическую страницу по URL
+    val page: HtmlPage = webClient.getPage(URL_QUOTES)
+    // Ожидаю загрузку JS
+    webClient.waitForBackgroundJavaScript(TIMEOUT_LOADING_JS)
+
+    // Преобразуем текущую веб-страницу в XML-строку
+    val pageXml = page.asXml()
+
+    // Обрабатываю полученную статику
+    val doc: Document = Jsoup.parse(pageXml);
+    val articles: Elements = doc.select(SELECTOR_QUOTES)
+
+    // Вывожу цитаты
+    for (article: Element in articles) {
+        println(article.text())
     }
 }
